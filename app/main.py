@@ -9,6 +9,9 @@ class EmployeeCreate(BaseModel):
 class Employee(EmployeeCreate):
     id: int
 
+class EmployeeWebhook(EmployeeCreate):
+    event_id: str
+
 app = FastAPI()
 employees: dict[int, Employee] = {}
 
@@ -36,3 +39,12 @@ def get_employee(employee_id: int) -> Employee:
         raise HTTPException(status_code=404, detail="Employee not found")
     return employees[employee_id]
 
+processed_event_ids: set[str] = set()
+@app.post("/webhooks/employees", status_code=200)
+def receive_employee_webhook(webhook: EmployeeWebhook):
+    if webhook.event_id in processed_event_ids:
+        return {"status": "ok"}
+    employee = Employee(id=generate_id(), **webhook.model_dump(exclude={"event_id"}))
+    employees[employee.id] = employee
+    processed_event_ids.add(webhook.event_id)
+    return {"status": "ok"}
