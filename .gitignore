@@ -1,2 +1,5 @@
 .venv
-.cursor
+.cursor/*
+!.cursor/rules/
+!.cursor/rules/**
+__pycache__/
